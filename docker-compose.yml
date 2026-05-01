@@ -1,0 +1,39 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: reviewforge
+      POSTGRES_PASSWORD: reviewforge
+      POSTGRES_DB: reviewforge
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U reviewforge -d reviewforge']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build: .
+    restart: unless-stopped
+    ports:
+      - '3000:3000'
+    environment:
+      DATABASE_URL: postgresql://reviewforge:reviewforge@db:5432/reviewforge
+      NUXT_SESSION_PASSWORD: ${NUXT_SESSION_PASSWORD:-change-me-to-at-least-32-characters-long}
+      NUXT_OAUTH_GITHUB_CLIENT_ID: ${NUXT_OAUTH_GITHUB_CLIENT_ID}
+      NUXT_OAUTH_GITHUB_CLIENT_SECRET: ${NUXT_OAUTH_GITHUB_CLIENT_SECRET}
+      NUXT_PUBLIC_BASE_URL: ${NUXT_PUBLIC_BASE_URL:-http://localhost:3000}
+      NUXT_PUBLIC_GITHUB_APP_SLUG: ${NUXT_PUBLIC_GITHUB_APP_SLUG}
+      NUXT_GITHUB_APP_ID: ${NUXT_GITHUB_APP_ID}
+      NUXT_GITHUB_APP_PRIVATE_KEY: ${NUXT_GITHUB_APP_PRIVATE_KEY}
+      NUXT_GITHUB_WEBHOOK_SECRET: ${NUXT_GITHUB_WEBHOOK_SECRET}
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
