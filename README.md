@@ -35,7 +35,7 @@ docker compose up --build
 
 ## Local development (app on host, npm)
 
-Requirements: **Node.js 22+** and **npm**.
+Requirements: **Node.js 24+** and **npm**.
 
 ```bash
 cp .env.example .env

@@ -6,7 +6,7 @@ This guide walks through creating the **GitHub OAuth App** (sign-in), the **GitH
 
 ## Prerequisites
 
-- **Node.js 22+** and **npm** (bundled with Node)
+- **Node.js 24+** and **npm** (bundled with Node)
 - **PostgreSQL 16+** (local install, or only the `db` service from `docker compose up -d db`)
 - A GitHub account that can create OAuth Apps and GitHub Apps
 
