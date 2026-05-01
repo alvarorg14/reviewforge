@@ -1,0 +1,52 @@
+{
+  "name": "reviewforge",
+  "type": "module",
+  "private": true,
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "nuxt typecheck",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:migrate:prod": "node ./scripts/migrate-db.mjs",
+    "db:studio": "drizzle-kit studio"
+  },
+  "dependencies": {
+    "@nuxt/ui": "^4.7.1",
+    "@nuxtjs/color-mode": "^4.0.0",
+    "@octokit/auth-app": "^8.2.0",
+    "@octokit/rest": "^22.0.1",
+    "@octokit/webhooks": "^14.2.0",
+    "@vueuse/nuxt": "^14.3.0",
+    "drizzle-orm": "^0.45.2",
+    "nuxt": "^4.4.4",
+    "nuxt-auth-utils": "^0.5.29",
+    "pg": "^8.20.0",
+    "tailwindcss": "^4.2.4",
+    "vue": "^3.5.33",
+    "vue-router": "^5.0.6"
+  },
+  "devDependencies": {
+    "@nuxt/eslint": "^1.15.2",
+    "@nuxt/test-utils": "^4.0.3",
+    "@types/pg": "^8.20.0",
+    "@vue/language-core": "^3.2.7",
+    "drizzle-kit": "^0.31.10",
+    "happy-dom": "^20.9.0",
+    "prettier": "^3.8.3",
+    "vitest": "^4.1.5",
+    "vue-tsc": "^3.2.7"
+  }
+}
