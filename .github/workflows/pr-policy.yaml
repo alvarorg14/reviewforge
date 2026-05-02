@@ -1,0 +1,26 @@
+name: PR Policy
+
+on:
+  pull_request:
+    types: [labeled, unlabeled, opened, edited, synchronize, reopened, ready_for_review]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  check-labels:
+    name: Check labels (ReviewForge policy)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require a type:* label
+        uses: yogevbd/enforce-label-action@a3c219da6b8fa73f6ba62b68ff09c469b3a1c024 # 2.2.2
+        with:
+          REQUIRED_LABELS_ANY: "type: feature,type: bug,type: enhancement,type: documentation,type: refactor,type: maintenance,type: security"
+          REQUIRED_LABELS_ANY_DESCRIPTION: "Add exactly one type:* label (required): type: feature | type: bug | type: enhancement | type: documentation | type: refactor | type: maintenance | type: security"
+
+      - name: Ban status:* labels on PRs (issues only)
+        uses: yogevbd/enforce-label-action@a3c219da6b8fa73f6ba62b68ff09c469b3a1c024 # 2.2.2
+        with:
+          BANNED_LABELS: "status: triage,status: needs info,status: blocked,status: ready,status: in progress,status: stalled"
+          BANNED_LABELS_DESCRIPTION: "Do not use status:* labels on PRs (issues only). Remove the status label(s) from this PR."
