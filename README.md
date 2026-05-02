@@ -18,6 +18,7 @@ The codebase is structured for extension: PR comments, checks, deployments, and 
 
 - **[GitHub OAuth + GitHub App + local run (step-by-step)](./docs/CONFIGURATION.md)** — start here for credentials and `npm run dev`.
 - **[`.env.example`](./.env.example)** — all environment variables.
+- **[CONTRIBUTING.md](./CONTRIBUTING.md)** — PR labels, local checks, and contribution expectations.
 
 ## Quick start (Docker Compose)
 
@@ -85,6 +86,6 @@ MIT — see [LICENSE](./LICENSE).
 
 ## Contributing
 
-See [CONTRIBUTING.md](./CONTRIBUTING.md) and [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md).
+See **[CONTRIBUTING.md](./CONTRIBUTING.md)** for development workflow and **PR label policy** (required `type:*` label; do not use `status:*` on PRs), and **[CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md)**.
 
 Security disclosures: [SECURITY.md](./SECURITY.md).

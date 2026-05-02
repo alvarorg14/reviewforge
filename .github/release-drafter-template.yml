@@ -1,0 +1,67 @@
+name-template: "v$RESOLVED_VERSION"
+tag-template: "v$RESOLVED_VERSION"
+
+# Release Drafter will group PRs into these sections based on labels
+categories:
+  - title: "🚨 Breaking Changes"
+    labels:
+      - "breaking change"
+
+  - title: "🚀 Features"
+    labels:
+      - "type: feature"
+
+  - title: "🐛 Bug Fixes"
+    labels:
+      - "type: bug"
+
+  - title: "✨ Enhancements"
+    labels:
+      - "type: enhancement"
+
+  - title: "🔒 Security"
+    labels:
+      - "type: security"
+
+  - title: "🧹 Refactors"
+    labels:
+      - "type: refactor"
+
+  - title: "🛠 Maintenance"
+    labels:
+      - "type: maintenance"
+      - "dependencies"
+
+  - title: "📚 Documentation"
+    labels:
+      - "type: documentation"
+
+exclude-labels:
+  - "skip-changelog"
+
+# How the next version is chosen
+version-resolver:
+  major:
+    labels:
+      - "breaking change"
+  minor:
+    labels:
+      - "type: feature"
+  patch:
+    labels:
+      - "type: bug"
+      - "type: enhancement"
+      - "type: documentation"
+      - "type: refactor"
+      - "type: maintenance"
+      - "type: security"
+      - "dependencies"
+  default: patch
+
+# Optional: show contributors
+include-contributors: true
+
+change-template: "- $TITLE (#$NUMBER) @$AUTHOR"
+
+template: |
+  $CHANGES
