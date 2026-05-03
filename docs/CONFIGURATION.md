@@ -106,7 +106,7 @@ Edit `.env` and set at least:
 | `NUXT_PUBLIC_BASE_URL` | e.g. `http://localhost:3000` |
 | `NUXT_GITHUB_APP_ID` / `NUXT_GITHUB_APP_PRIVATE_KEY` / `NUXT_GITHUB_WEBHOOK_SECRET` | GitHub App |
 | `NUXT_PUBLIC_GITHUB_APP_SLUG` | Slug from `https://github.com/apps/<slug>` |
-| `NUXT_CURSOR_API_KEY` (or `CURSOR_API_KEY`) | [Cursor Integrations](https://cursor.com/dashboard/integrations) — enables **AI PR review** (Cursor SDK + GitHub hosted MCP) |
+| `NUXT_ENCRYPTION_KEY` (or `ENCRYPTION_KEY`) | At least 32 characters — encrypts **per-user** [Cursor API keys](https://cursor.com/settings) stored in the database for **AI PR review**. Each user adds their own key in **Dashboard → Settings**. Rotating this env invalidates stored keys until users save them again. |
 | `NUXT_GITHUB_MCP_REMOTE_URL` (or `GITHUB_MCP_REMOTE_URL`, optional) | GitHub remote MCP base URL (default: `https://api.githubcopilot.com/mcp/`). The app sends `Authorization: Bearer <installation token>`. |
 
 ---

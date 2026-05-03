@@ -8,15 +8,15 @@ import type { IAIReviewer, ReviewInput, ReviewResult } from './types'
 export const cursorReviewer: IAIReviewer = {
   id: 'cursor',
   async review(input: ReviewInput): Promise<ReviewResult> {
-    const config = useRuntimeConfig()
-    const apiKey = String(config.cursorApiKey || '').trim()
+    const apiKey = String(input.apiKey || '').trim()
     if (!apiKey) {
       throw createError({
         statusCode: 500,
-        message:
-          'NUXT_CURSOR_API_KEY / CURSOR_API_KEY is not configured (Cursor SDK)',
+        message: 'Cursor API key is missing for this review run',
       })
     }
+
+    const config = useRuntimeConfig()
 
     const cwd = await mkdtemp(join(tmpdir(), 'reviewforge-ai-'))
 

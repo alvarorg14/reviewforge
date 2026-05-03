@@ -11,6 +11,7 @@ export function isReviewStyle(value: string): value is ReviewStyle {
 }
 
 export type ReviewInput = {
+  apiKey: string
   owner: string
   repo: string
   pullNumber: number

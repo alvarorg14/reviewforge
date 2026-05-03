@@ -24,6 +24,7 @@ services:
     environment:
       DATABASE_URL: postgresql://reviewforge:reviewforge@db:5432/reviewforge
       NUXT_SESSION_PASSWORD: ${NUXT_SESSION_PASSWORD:-change-me-to-at-least-32-characters-long}
+      NUXT_ENCRYPTION_KEY: ${NUXT_ENCRYPTION_KEY:-change-me-to-at-least-32-characters-long}
       NUXT_OAUTH_GITHUB_CLIENT_ID: ${NUXT_OAUTH_GITHUB_CLIENT_ID}
       NUXT_OAUTH_GITHUB_CLIENT_SECRET: ${NUXT_OAUTH_GITHUB_CLIENT_SECRET}
       NUXT_PUBLIC_BASE_URL: ${NUXT_PUBLIC_BASE_URL:-http://localhost:3000}

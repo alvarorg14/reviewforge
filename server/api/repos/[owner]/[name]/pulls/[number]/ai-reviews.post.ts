@@ -2,6 +2,7 @@ import { and, eq, inArray } from 'drizzle-orm'
 import { aiReviewRuns } from '../../../../../../db/schema'
 import { startAIReviewRunInBackground } from '../../../../../../services/ai/runner'
 import { isReviewStyle } from '../../../../../../services/ai/types'
+import { userHasStoredCursorApiKey } from '../../../../../../services/ai/userApiKey'
 import { createInstallationOctokit } from '../../../../../../services/github/client'
 import { getRepositoryForUser } from '../../../../../../services/github/repos'
 
@@ -26,6 +27,14 @@ export default defineEventHandler(async (event) => {
   const row = await getRepositoryForUser(db, session.user.id, owner, name)
   if (!row) {
     throw createError({ statusCode: 404, message: 'Repository not found' })
+  }
+
+  const hasKey = await userHasStoredCursorApiKey(db, session.user.id)
+  if (!hasKey) {
+    throw createError({
+      statusCode: 400,
+      message: 'Set your Cursor API key in Settings to run AI reviews.',
+    })
   }
 
   const existing = await db
@@ -88,6 +97,7 @@ export default defineEventHandler(async (event) => {
   startAIReviewRunInBackground({
     db,
     runId: inserted.id,
+    requestedByUserId: session.user.id,
     installationGithubId: row.installation.githubInstallationId,
     owner,
     repo: name,

@@ -17,6 +17,11 @@ export const users = pgTable('users', {
   name: text('name'),
   avatarUrl: text('avatar_url'),
   email: text('email'),
+  /** AES-256-GCM ciphertext (base64); see server/services/crypto/secretBox.ts */
+  cursorApiKeyEncrypted: text('cursor_api_key_encrypted'),
+  cursorApiKeyUpdatedAt: timestamp('cursor_api_key_updated_at', {
+    withTimezone: true,
+  }),
   createdAt: timestamp('created_at', { withTimezone: true })
     .defaultNow()
     .notNull(),

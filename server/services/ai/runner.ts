@@ -4,10 +4,12 @@ import { aiReviewRuns } from '../../db/schema'
 import { getInstallationAccessToken } from '../github/client'
 import { cursorReviewer } from './cursor'
 import type { ReviewStyle } from './types'
+import { getCursorApiKeyForUser } from './userApiKey'
 
 export type StartAIReviewParams = {
   db: Database
   runId: number
+  requestedByUserId: number
   installationGithubId: number
   owner: string
   repo: string
@@ -29,6 +31,7 @@ async function processAIReviewRun(params: StartAIReviewParams): Promise<void> {
   const {
     db,
     runId,
+    requestedByUserId,
     installationGithubId,
     owner,
     repo,
@@ -45,8 +48,28 @@ async function processAIReviewRun(params: StartAIReviewParams): Promise<void> {
       .set({ status: 'running' })
       .where(eq(aiReviewRuns.id, runId))
 
+    const config = useRuntimeConfig()
+    const master = String(config.encryptionKey || '')
+    const apiKey = await getCursorApiKeyForUser(
+      db,
+      requestedByUserId,
+      master,
+    )
+    if (!apiKey?.trim()) {
+      await db
+        .update(aiReviewRuns)
+        .set({
+          status: 'failed',
+          error: 'Cursor API key missing for requesting user',
+          finishedAt: new Date(),
+        })
+        .where(eq(aiReviewRuns.id, runId))
+      return
+    }
+
     const token = await getInstallationAccessToken(installationGithubId)
     const result = await cursorReviewer.review({
+      apiKey: apiKey.trim(),
       owner,
       repo,
       pullNumber,
