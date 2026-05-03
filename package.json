@@ -32,6 +32,7 @@
     "@octokit/webhooks": "^14.2.0",
     "@vueuse/nuxt": "^14.3.0",
     "drizzle-orm": "^0.45.2",
+    "marked": "^18.0.3",
     "nuxt": "^4.4.4",
     "nuxt-auth-utils": "^0.5.29",
     "pg": "^8.20.0",
