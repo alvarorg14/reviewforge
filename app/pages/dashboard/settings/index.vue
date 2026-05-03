@@ -38,7 +38,7 @@
 </template>
 
 <script setup lang="ts">
-definePageMeta({ layout: 'app' })
+definePageMeta({ layout: 'dashboard' })
 
 const config = useRuntimeConfig()
 const githubAppSlug = computed(() => config.public.githubAppSlug)

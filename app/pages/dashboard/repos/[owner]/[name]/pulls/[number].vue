@@ -33,7 +33,7 @@
 </template>
 
 <script setup lang="ts">
-definePageMeta({ layout: 'app' })
+definePageMeta({ layout: 'dashboard' })
 
 const route = useRoute()
 const owner = computed(() => String(route.params.owner))
@@ -41,7 +41,7 @@ const repo = computed(() => String(route.params.name))
 const number = computed(() => String(route.params.number))
 
 const listUrl = computed(
-  () => `/app/repos/${owner.value}/${repo.value}/pulls`,
+  () => `/dashboard/repos/${owner.value}/${repo.value}/pulls`,
 )
 
 const githubPrUrl = computed(

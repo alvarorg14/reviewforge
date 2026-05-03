@@ -2,7 +2,7 @@
   <div class="rounded-lg border border-default bg-elevated/30 p-4">
     <div class="flex flex-wrap items-center justify-between gap-3">
       <div>
-        <h2 class="text-sm font-semibold">AI review (Cursor)</h2>
+        <h2 class="text-sm font-semibold text-ai-gradient">AI review (Cursor)</h2>
         <p class="mt-0.5 text-xs text-muted">
           Posts inline comments and a review on GitHub via the GitHub MCP.
         </p>
@@ -11,6 +11,9 @@
         icon="i-lucide-sparkles"
         :loading="triggering"
         :disabled="isBusy || triggering"
+        color="neutral"
+        variant="solid"
+        class="!bg-ai-gradient !text-white shadow-sm ring-0 hover:!brightness-110 focus-visible:!ring-white/40"
         @click="onTrigger"
       >
         Run AI review

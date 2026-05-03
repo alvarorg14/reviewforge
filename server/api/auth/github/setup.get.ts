@@ -39,5 +39,5 @@ export default defineEventHandler(async (event) => {
 
   await linkUserToInstallation(db, session.user.id, row.id)
 
-  return sendRedirect(event, `/app/installations/${row.id}/select`)
+  return sendRedirect(event, `/dashboard/installations/${row.id}/select`)
 })
