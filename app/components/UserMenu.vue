@@ -32,12 +32,12 @@ const items = computed(() => [
     {
       label: 'Dashboard',
       icon: 'i-lucide-layout-dashboard',
-      to: '/app',
+      to: '/dashboard',
     },
     {
       label: 'Settings',
       icon: 'i-lucide-settings',
-      to: '/app/settings',
+      to: '/dashboard/settings',
     },
   ],
   [

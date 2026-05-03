@@ -59,7 +59,7 @@ const props = defineProps({
 })
 
 const detailUrl = computed(
-  () => `/app/repos/${props.owner}/${props.repo}/pulls/${props.pr.number}`,
+  () => `/dashboard/repos/${props.owner}/${props.repo}/pulls/${props.pr.number}`,
 )
 
 function formatDate(iso) {

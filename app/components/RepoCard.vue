@@ -19,7 +19,7 @@
         </p>
       </div>
       <UButton
-        :to="`/app/repos/${repo.owner}/${repo.name}/pulls`"
+        :to="`/dashboard/repos/${repo.owner}/${repo.name}/pulls`"
         size="sm"
         color="primary"
         variant="soft"

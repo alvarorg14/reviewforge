@@ -48,7 +48,7 @@
             </p>
           </div>
           <UButton
-            :to="`/app/installations/${inst.id}/select`"
+            :to="`/dashboard/installations/${inst.id}/select`"
             variant="soft"
             size="sm"
           >
@@ -64,7 +64,7 @@
           title="No repositories imported yet"
           description="Pick which repositories from this installation should appear on your dashboard."
         >
-          <UButton :to="`/app/installations/${inst.id}/select`" size="sm">
+          <UButton :to="`/dashboard/installations/${inst.id}/select`" size="sm">
             Select repositories
           </UButton>
         </EmptyState>
@@ -77,7 +77,7 @@
 </template>
 
 <script setup>
-definePageMeta({ layout: 'app' })
+definePageMeta({ layout: 'dashboard' })
 
 const config = useRuntimeConfig()
 const githubAppSlug = computed(() => config.public.githubAppSlug)

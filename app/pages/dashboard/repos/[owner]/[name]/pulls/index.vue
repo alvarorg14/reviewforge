@@ -3,7 +3,7 @@
     <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
       <div>
         <UButton
-          to="/app"
+          to="/dashboard"
           variant="ghost"
           color="neutral"
           icon="i-lucide-arrow-left"
@@ -46,7 +46,7 @@
 </template>
 
 <script setup>
-definePageMeta({ layout: 'app' })
+definePageMeta({ layout: 'dashboard' })
 
 const route = useRoute()
 const owner = computed(() => String(route.params.owner))

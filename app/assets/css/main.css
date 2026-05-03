@@ -1,2 +1,106 @@
 @import 'tailwindcss';
 @import '@nuxt/ui';
+
+@theme {
+  /* Forge cyan ramp — anchors: Deep Teal #009AA3 (600), Forge Cyan #00BFC6 (500), Bright Cyan #16D6DC (400) */
+  --color-forge-50: #ecfeff;
+  --color-forge-100: #cffafe;
+  --color-forge-200: #a5f3fc;
+  --color-forge-300: #67e8f9;
+  --color-forge-400: #16d6dc;
+  --color-forge-500: #00bfc6;
+  --color-forge-600: #009aa3;
+  --color-forge-700: #0e7a82;
+  --color-forge-800: #155e66;
+  --color-forge-900: #134e54;
+  --color-forge-950: #0a2c30;
+
+  /* Graphite ramp — Snow, Cloud, neutrals, Ink, Forge Black */
+  --color-graphite-50: #fafbfc;
+  --color-graphite-100: #f2f4f7;
+  --color-graphite-200: #e5e7eb;
+  --color-graphite-300: #d1d5db;
+  --color-graphite-400: #9ca3af;
+  --color-graphite-500: #6b7280;
+  --color-graphite-600: #4b5563;
+  --color-graphite-700: #374151;
+  --color-graphite-800: #1c2128;
+  --color-graphite-900: #111827;
+  --color-graphite-950: #0f1115;
+
+  /* Brand semantic tokens */
+  --color-forge-black: #0f1115;
+  --color-forge-cyan: #00bfc6;
+  --color-bright-cyan: #16d6dc;
+  --color-deep-teal: #009aa3;
+  --color-cloud: #f2f4f7;
+  --color-snow: #fafbfc;
+  --color-agent-violet: #8b5cf6;
+  --color-merge-green: #22c55e;
+  --color-review-amber: #f59e0b;
+  --color-blocker-red: #ef4444;
+  --color-diff-blue: #3b82f6;
+}
+
+/* Light mode — surfaces + explicit text stack (Ink / Slate / Steel) so ghost + labels never wash out */
+:root,
+.light {
+  --ui-bg: var(--color-snow);
+  --ui-bg-muted: var(--color-cloud);
+  --ui-bg-elevated: #ffffff;
+  --ui-bg-accented: var(--color-graphite-200);
+  --ui-border: var(--color-graphite-200);
+  --ui-border-muted: var(--color-graphite-200);
+  --ui-border-accented: var(--color-graphite-300);
+  --ui-bg-inverted: var(--color-graphite-900);
+  --ui-border-inverted: var(--color-graphite-900);
+  --ui-text-dimmed: var(--color-graphite-400);
+  --ui-text-muted: var(--color-graphite-500);
+  --ui-text-toned: var(--color-graphite-600);
+  --ui-text: var(--color-graphite-700);
+  --ui-text-highlighted: var(--color-graphite-900);
+  --ui-text-inverted: #ffffff;
+  /* Belt-and-suspenders: primary CTA fill (Nuxt UI maps --ui-primary → solid buttons) */
+  --ui-primary: var(--color-forge-500);
+  --ui-secondary: var(--color-forge-500);
+}
+
+/* Dark mode — Forge Black + readable grays + primary on 400 for contrast */
+.dark {
+  --ui-bg: var(--color-forge-black);
+  --ui-bg-muted: var(--color-graphite-800);
+  --ui-bg-elevated: var(--color-graphite-800);
+  --ui-bg-accented: var(--color-graphite-700);
+  --ui-border: var(--color-graphite-800);
+  --ui-border-muted: var(--color-graphite-800);
+  --ui-border-accented: var(--color-graphite-700);
+  --ui-bg-inverted: #ffffff;
+  --ui-border-inverted: #ffffff;
+  --ui-text-dimmed: var(--color-graphite-500);
+  --ui-text-muted: var(--color-graphite-400);
+  --ui-text-toned: var(--color-graphite-300);
+  --ui-text: var(--color-graphite-200);
+  --ui-text-highlighted: #ffffff;
+  --ui-text-inverted: var(--color-graphite-950);
+  --ui-primary: var(--color-forge-400);
+  --ui-secondary: var(--color-forge-400);
+}
+
+@utility bg-logo-gradient {
+  background-image: linear-gradient(135deg, #00bfc6 0%, #16d6dc 55%, #67e8f9 100%);
+}
+
+@utility bg-dark-surface-gradient {
+  background-image: linear-gradient(135deg, #0f1115 0%, #1c2128 100%);
+}
+
+@utility bg-ai-gradient {
+  background-image: linear-gradient(135deg, #00bfc6 0%, #3b82f6 50%, #8b5cf6 100%);
+}
+
+@utility text-ai-gradient {
+  background-image: linear-gradient(135deg, #00bfc6 0%, #3b82f6 50%, #8b5cf6 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}

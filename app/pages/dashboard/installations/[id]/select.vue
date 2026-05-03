@@ -1,7 +1,7 @@
 <template>
   <div class="space-y-8">
     <div>
-      <UButton to="/app" variant="ghost" icon="i-lucide-arrow-left" size="sm">
+      <UButton to="/dashboard" variant="ghost" icon="i-lucide-arrow-left" size="sm">
         Dashboard
       </UButton>
       <h1 class="mt-4 text-2xl font-bold tracking-tight">Import repositories</h1>
@@ -99,7 +99,7 @@
 </template>
 
 <script setup>
-definePageMeta({ layout: 'app' })
+definePageMeta({ layout: 'dashboard' })
 
 const route = useRoute()
 const config = useRuntimeConfig()
@@ -168,7 +168,7 @@ async function submitImport() {
       method: 'POST',
       body: { githubRepoIds: [...selected.value] },
     })
-    await navigateTo('/app')
+    await navigateTo('/dashboard')
   } catch (e) {
     importError.value =
       e?.data?.message ?? e?.message ?? 'Something went wrong. Try again.'
