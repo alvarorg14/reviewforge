@@ -2,7 +2,7 @@ import { Agent } from '@cursor/sdk'
 import { mkdtemp } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { buildReviewPrompt } from './prompt'
+import { buildReviewPrompt } from './prompts'
 import type { IAIReviewer, ReviewInput, ReviewResult } from './types'
 
 export const cursorReviewer: IAIReviewer = {

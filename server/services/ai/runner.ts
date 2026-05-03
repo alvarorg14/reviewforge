@@ -3,6 +3,7 @@ import type { Database } from '../../db/client'
 import { aiReviewRuns } from '../../db/schema'
 import { getInstallationAccessToken } from '../github/client'
 import { cursorReviewer } from './cursor'
+import type { ReviewStyle } from './types'
 
 export type StartAIReviewParams = {
   db: Database
@@ -12,6 +13,9 @@ export type StartAIReviewParams = {
   repo: string
   pullNumber: number
   prHtmlUrl: string
+  repoContext?: string | null
+  allowApprove: boolean
+  reviewStyle: ReviewStyle
 }
 
 /** Fire-and-forget: updates ai_review_runs as the Cursor run progresses. */
@@ -30,6 +34,9 @@ async function processAIReviewRun(params: StartAIReviewParams): Promise<void> {
     repo,
     pullNumber,
     prHtmlUrl,
+    repoContext,
+    allowApprove,
+    reviewStyle,
   } = params
 
   try {
@@ -45,6 +52,9 @@ async function processAIReviewRun(params: StartAIReviewParams): Promise<void> {
       pullNumber,
       installationToken: token,
       prHtmlUrl,
+      repoContext,
+      allowApprove,
+      reviewStyle,
     })
 
     await db

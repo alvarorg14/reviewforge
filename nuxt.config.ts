@@ -1,7 +1,14 @@
+import { fileURLToPath } from 'node:url'
+
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
+
+  /** Stable imports from `/shared` for app code (relative paths break in SSR bundle output). */
+  alias: {
+    '#shared': fileURLToPath(new URL('./shared', import.meta.url)),
+  },
 
   app: {
     head: {

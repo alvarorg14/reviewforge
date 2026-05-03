@@ -16,12 +16,23 @@
         </h1>
         <p class="mt-1 font-mono text-sm text-muted">{{ owner }}/{{ name }}</p>
       </div>
-      <USelect
-        v-model="state"
-        :items="stateItems"
-        class="w-44"
-        size="md"
-      />
+      <div class="flex flex-wrap items-center gap-2">
+        <UButton
+          :to="settingsUrl"
+          variant="outline"
+          color="neutral"
+          icon="i-lucide-settings"
+          size="md"
+        >
+          AI review settings
+        </UButton>
+        <USelect
+          v-model="state"
+          :items="stateItems"
+          class="w-44"
+          size="md"
+        />
+      </div>
     </div>
 
     <div v-if="pending" class="flex justify-center py-16">
@@ -58,6 +69,10 @@ const stateItems = [
   { label: 'Closed', value: 'closed' },
   { label: 'All', value: 'all' },
 ]
+
+const settingsUrl = computed(
+  () => `/dashboard/repos/${owner.value}/${name.value}/settings`,
+)
 
 const { data, pending } = await useFetch(
   () =>
