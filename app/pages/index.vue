@@ -4,7 +4,7 @@
       <UContainer class="py-20 sm:py-28">
         <div class="mx-auto max-w-2xl text-center">
           <div class="mb-6 flex justify-center">
-            <Logo to="/" size="lg" />
+            <AppLogo to="/" size="lg" />
           </div>
           <UBadge color="primary" variant="subtle" class="mb-4">
             Open source

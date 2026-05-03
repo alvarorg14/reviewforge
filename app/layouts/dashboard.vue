@@ -4,7 +4,7 @@
       class="sticky top-0 z-40 border-b border-default bg-background/80 text-default backdrop-blur"
     >
       <UContainer class="flex h-14 items-center justify-between gap-4">
-        <Logo to="/" />
+        <AppLogo to="/" />
         <nav class="flex items-center gap-2">
           <UButton to="/dashboard" variant="ghost" color="neutral" size="sm">
             Dashboard

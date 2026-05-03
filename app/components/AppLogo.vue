@@ -10,7 +10,7 @@
       :class="iconSizeClass"
       width="64"
       height="64"
-    />
+    >
     <span
       v-if="wordmark"
       class="font-semibold tracking-tight text-highlighted"
