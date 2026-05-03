@@ -75,3 +75,28 @@ export const repositories = pgTable(
     ownerNameIdx: index('repositories_owner_name_idx').on(t.owner, t.name),
   }),
 )
+
+export const aiReviewRuns = pgTable(
+  'ai_review_runs',
+  {
+    id: serial('id').primaryKey(),
+    repositoryId: integer('repository_id')
+      .notNull()
+      .references(() => repositories.id, { onDelete: 'cascade' }),
+    prNumber: integer('pr_number').notNull(),
+    requestedByUserId: integer('requested_by_user_id')
+      .notNull()
+      .references(() => users.id),
+    status: text('status').notNull(),
+    cursorAgentId: text('cursor_agent_id'),
+    summary: text('summary'),
+    error: text('error'),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    finishedAt: timestamp('finished_at', { withTimezone: true }),
+  },
+  (t) => ({
+    repoPrIdx: index('ai_review_runs_repo_pr_idx').on(t.repositoryId, t.prNumber),
+  }),
+)

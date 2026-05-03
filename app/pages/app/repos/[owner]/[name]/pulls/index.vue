@@ -34,7 +34,13 @@
     />
 
     <div v-else class="space-y-3">
-      <PullRequestRow v-for="pr in data.pulls" :key="pr.number" :pr="pr" />
+      <PullRequestRow
+      v-for="pr in data.pulls"
+      :key="pr.number"
+      :pr="pr"
+      :owner="owner"
+      :repo="name"
+    />
     </div>
   </div>
 </template>

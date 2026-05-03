@@ -48,3 +48,20 @@ export function createInstallationOctokit(installationGithubId: number): Octokit
     },
   })
 }
+
+/** Short-lived token for GitHub API / MCP (installation-scoped). */
+export async function getInstallationAccessToken(
+  installationGithubId: number,
+): Promise<string> {
+  const octokit = createAppJwtOctokit()
+  const { data } = await octokit.rest.apps.createInstallationAccessToken({
+    installation_id: installationGithubId,
+  })
+  if (!data.token) {
+    throw createError({
+      statusCode: 500,
+      message: 'Failed to mint GitHub installation token',
+    })
+  }
+  return data.token
+}

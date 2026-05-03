@@ -2,13 +2,17 @@ export type ReviewInput = {
   owner: string
   repo: string
   pullNumber: number
-  headSha: string
-  baseSha: string
+  installationToken: string
+  prHtmlUrl: string
 }
 
+export type ReviewRunTerminalStatus = 'succeeded' | 'failed' | 'cancelled'
+
 export type ReviewResult = {
+  cursorAgentId: string
+  status: ReviewRunTerminalStatus
   summary: string
-  findings: Array<{ severity: 'info' | 'warn' | 'error'; message: string }>
+  error?: string
 }
 
 export interface IAIReviewer {

@@ -1,15 +1,34 @@
 <template>
-  <div class="mx-auto max-w-lg py-16 text-center">
-    <UIcon name="i-lucide-construction" class="mx-auto size-12 text-dimmed" />
-    <h1 class="mt-4 text-xl font-semibold">Pull request detail</h1>
-    <p class="mt-2 text-muted">
-      Comments, timeline, and Cursor-powered reviews will land in a future
-      release. PR #{{ number }} in
-      <span class="font-mono text-sm">{{ owner }}/{{ repo }}</span>
+  <div class="mx-auto max-w-2xl space-y-8 py-8">
+    <div>
+      <UButton
+        :to="listUrl"
+        variant="ghost"
+        color="neutral"
+        icon="i-lucide-arrow-left"
+        class="-ml-2 mb-4"
+      >
+        Back to PR list
+      </UButton>
+      <h1 class="text-2xl font-bold tracking-tight">
+        Pull request #{{ number }}
+      </h1>
+      <p class="mt-1 font-mono text-sm text-muted">{{ owner }}/{{ repo }}</p>
+    </div>
+
+    <AiReviewPanel :owner="owner" :name="repo" :number="number" />
+
+    <p class="text-center text-sm text-muted">
+      Full PR timeline and comments will expand in a future release.
+      <a
+        :href="githubPrUrl"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="text-primary underline-offset-2 hover:underline"
+      >
+        Open on GitHub
+      </a>
     </p>
-    <UButton :to="listUrl" class="mt-6" variant="soft">
-      Back to PR list
-    </UButton>
   </div>
 </template>
 
@@ -23,5 +42,10 @@ const number = computed(() => String(route.params.number))
 
 const listUrl = computed(
   () => `/app/repos/${owner.value}/${repo.value}/pulls`,
+)
+
+const githubPrUrl = computed(
+  () =>
+    `https://github.com/${encodeURIComponent(owner.value)}/${encodeURIComponent(repo.value)}/pull/${encodeURIComponent(number.value)}`,
 )
 </script>
