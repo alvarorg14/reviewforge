@@ -30,6 +30,13 @@ export default defineNuxtConfig({
       process.env.NUXT_GITHUB_APP_PRIVATE_KEY ||
       process.env.GITHUB_APP_PRIVATE_KEY ||
       '',
+    cursorApiKey:
+      process.env.NUXT_CURSOR_API_KEY || process.env.CURSOR_API_KEY || '',
+    /** AI PR review: GitHub hosted MCP (Cursor SDK `type: http`). */
+    githubMcpRemoteUrl:
+      process.env.NUXT_GITHUB_MCP_REMOTE_URL ||
+      process.env.GITHUB_MCP_REMOTE_URL ||
+      'https://api.githubcopilot.com/mcp/',
     public: {
       appName: 'ReviewForge',
       baseUrl:

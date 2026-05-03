@@ -76,8 +76,7 @@ flowchart LR
 
 ## Roadmap
 
-- PR detail, comments, and review threads
-- Cursor SDK (and optional OpenCode) agentic reviews behind `server/services/ai/*`
+- PR detail, **Cursor SDK AI review** (button → GitHub MCP posts review), comments, and review threads
 - Deployments, checks, and notifications
 
 ## License

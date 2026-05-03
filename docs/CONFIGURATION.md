@@ -45,7 +45,7 @@ If redirects fail in production, set **`NUXT_OAUTH_GITHUB_REDIRECT_URL`** to the
 
 ## 2. GitHub App (repositories + webhooks)
 
-Used to **list repositories** and **read pull requests** for repos the user selects during install.
+Used to **list repositories**, **read pull requests**, and (when **AI PR review** is enabled) **submit reviews and inline comments** on GitHub for repos the user selects during install.
 
 1. GitHub → **Settings** → **Developer settings** → **GitHub Apps** → **New GitHub App**.
 
@@ -62,10 +62,13 @@ Used to **list repositories** and **read pull requests** for repos the user sele
      For local dev, GitHub cannot reach `localhost` unless you use a tunnel ([smee.io](https://smee.io), ngrok, Cloudflare Tunnel, etc.) and put that **public** URL here instead.  
    - **Secret**: generate a long random string → same value as `NUXT_GITHUB_WEBHOOK_SECRET` in `.env`.
 
-6. **Repository permissions** (read-only for v1):
-   - **Metadata**: Read-only  
-   - **Contents**: Read-only  
-   - **Pull requests**: Read-only  
+6. **Repository permissions**:
+   - **Metadata**: Read-only (required)
+   - **Contents**: Read-only (read files / diffs as needed)
+   - **Pull requests**: **Read and write** — required for **AI PR review** (Cursor agent posts a review body, inline comments, and approve / request changes via the GitHub API). Read-only is enough for browsing the PR list only; without write, review submission from the app will fail with `403` / “Resource not accessible by integration”.
+   - **Issues**: Read-only — **recommended** so the reviewer can open issues linked from the PR description (the AI prompt asks for that context). Optional if you never link issues in PRs.
+
+   If you **raise** permissions on an app that is already installed, each account or organization must **accept the updated permissions** (GitHub shows a prompt on next use or from **Settings → Applications**).
 
 7. **Subscribe to events**:
    - **Installation**
@@ -103,6 +106,8 @@ Edit `.env` and set at least:
 | `NUXT_PUBLIC_BASE_URL` | e.g. `http://localhost:3000` |
 | `NUXT_GITHUB_APP_ID` / `NUXT_GITHUB_APP_PRIVATE_KEY` / `NUXT_GITHUB_WEBHOOK_SECRET` | GitHub App |
 | `NUXT_PUBLIC_GITHUB_APP_SLUG` | Slug from `https://github.com/apps/<slug>` |
+| `NUXT_CURSOR_API_KEY` (or `CURSOR_API_KEY`) | [Cursor Integrations](https://cursor.com/dashboard/integrations) — enables **AI PR review** (Cursor SDK + GitHub hosted MCP) |
+| `NUXT_GITHUB_MCP_REMOTE_URL` (or `GITHUB_MCP_REMOTE_URL`, optional) | GitHub remote MCP base URL (default: `https://api.githubcopilot.com/mcp/`). The app sends `Authorization: Bearer <installation token>`. |
 
 ---
 
@@ -152,6 +157,6 @@ Without a tunnel, installs still work if you use the **Setup URL** on the same h
 - [ ] OAuth App callback: `{BASE_URL}/auth/github`
 - [ ] GitHub App webhook: `{BASE_URL}/api/webhooks/github` (or tunnel)
 - [ ] GitHub App setup URL: `{BASE_URL}/api/auth/github/setup`
-- [ ] Permissions: Metadata, Contents, Pull requests (read)
+- [ ] Permissions: Metadata (read), Contents (read), Pull requests (**read & write** for AI review), Issues (read, recommended)
 - [ ] Events: Installation, Installation repositories
 - [ ] `.env` complete; `npm run db:migrate:prod`; `npm run dev`
