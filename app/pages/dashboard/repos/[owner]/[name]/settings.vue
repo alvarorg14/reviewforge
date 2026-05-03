@@ -91,7 +91,7 @@
 </template>
 
 <script setup lang="ts">
-import { AI_CONTEXT_MAX_LENGTH } from '../../../../../../shared/aiRepoSettings'
+import { AI_CONTEXT_MAX_LENGTH } from '#shared/aiRepoSettings'
 
 definePageMeta({ layout: 'dashboard' })
 
