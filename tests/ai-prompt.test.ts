@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { buildReviewPrompt } from '../server/services/ai/prompts'
 
 const baseInput = {
+  apiKey: 'dummy-cursor-api-key-for-prompt-tests-only',
   owner: 'acme',
   repo: 'widgets',
   pullNumber: 42,

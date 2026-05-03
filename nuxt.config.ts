@@ -61,8 +61,9 @@ export default defineNuxtConfig({
       process.env.NUXT_GITHUB_APP_PRIVATE_KEY ||
       process.env.GITHUB_APP_PRIVATE_KEY ||
       '',
-    cursorApiKey:
-      process.env.NUXT_CURSOR_API_KEY || process.env.CURSOR_API_KEY || '',
+    /** At least 32 chars. Used to encrypt per-user Cursor API keys at rest. */
+    encryptionKey:
+      process.env.NUXT_ENCRYPTION_KEY || process.env.ENCRYPTION_KEY || '',
     /** AI PR review: GitHub hosted MCP (Cursor SDK `type: http`). */
     githubMcpRemoteUrl:
       process.env.NUXT_GITHUB_MCP_REMOTE_URL ||

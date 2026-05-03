@@ -24,6 +24,16 @@
       A review is already running (run #{{ conflictRunId }}).
     </div>
 
+    <div
+      v-if="cursorKeyHint"
+      class="mt-3 flex flex-wrap items-center gap-2 rounded-md border border-error/30 bg-error/5 px-3 py-2 text-xs text-error"
+    >
+      <span>Add your Cursor API key in Settings to run reviews.</span>
+      <UButton to="/dashboard/settings" size="xs" variant="soft" color="error">
+        Open Settings
+      </UButton>
+    </div>
+
     <div v-if="latest" class="mt-4 space-y-2 text-sm">
       <div class="flex flex-wrap items-center gap-2">
         <UBadge
@@ -65,6 +75,8 @@
 <script setup lang="ts">
 import { useIntervalFn } from '@vueuse/core'
 
+const toast = useToast()
+
 const props = defineProps<{
   owner: string
   name: string
@@ -98,6 +110,7 @@ const { data: latest, refresh } = await useFetch<RunRow | null>(
 
 const triggering = ref(false)
 const conflictRunId = ref<number | null>(null)
+const cursorKeyHint = ref(false)
 
 const isBusy = computed(() =>
   latest.value ? isActiveStatus(latest.value.status) : false,
@@ -153,6 +166,7 @@ function statusBadgeColor(s: string) {
 
 async function onTrigger() {
   conflictRunId.value = null
+  cursorKeyHint.value = false
   triggering.value = true
   try {
     await $fetch<{ runId: number }>(`${basePath.value}/ai-reviews`, {
@@ -165,11 +179,26 @@ async function onTrigger() {
     const err = e as {
       statusCode?: number
       status?: number
-      data?: { runId?: number }
+      data?: { message?: string; runId?: number }
+      message?: string
     }
     const code = err.statusCode ?? err.status
     if (code === 409 && err.data?.runId != null) {
       conflictRunId.value = err.data.runId
+    } else if (code === 400) {
+      const msg =
+        typeof err.data?.message === 'string'
+          ? err.data.message
+          : (err.message ?? '')
+      if (msg.includes('Cursor API key')) {
+        cursorKeyHint.value = true
+        toast.add({
+          title: 'Cursor API key required',
+          description:
+            'Add your key under Dashboard → Settings, then try again.',
+          color: 'error',
+        })
+      }
     }
     await refresh()
   } finally {
