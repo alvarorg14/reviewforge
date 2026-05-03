@@ -1,6 +1,7 @@
 import { and, eq, inArray } from 'drizzle-orm'
 import { aiReviewRuns } from '../../../../../../db/schema'
 import { startAIReviewRunInBackground } from '../../../../../../services/ai/runner'
+import { isReviewStyle } from '../../../../../../services/ai/types'
 import { createInstallationOctokit } from '../../../../../../services/github/client'
 import { getRepositoryForUser } from '../../../../../../services/github/repos'
 
@@ -62,6 +63,14 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 404, message: 'Pull request not found' })
   }
 
+  const reviewStyle = row.repo.aiReviewStyle
+  if (!isReviewStyle(reviewStyle)) {
+    throw createError({
+      statusCode: 500,
+      message: 'Invalid aiReviewStyle stored for repository',
+    })
+  }
+
   const [inserted] = await db
     .insert(aiReviewRuns)
     .values({
@@ -84,6 +93,9 @@ export default defineEventHandler(async (event) => {
     repo: name,
     pullNumber: prNumber,
     prHtmlUrl,
+    repoContext: row.repo.aiContext,
+    allowApprove: row.repo.aiAllowApprove,
+    reviewStyle,
   })
 
   return { runId: inserted.id }

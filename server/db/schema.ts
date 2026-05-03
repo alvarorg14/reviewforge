@@ -67,6 +67,12 @@ export const repositories = pgTable(
     private: boolean('private').notNull().default(false),
     defaultBranch: text('default_branch'),
     lastSyncedAt: timestamp('last_synced_at', { withTimezone: true }),
+    /** Markdown injected into AI review prompts for this repo. */
+    aiContext: text('ai_context'),
+    /** When false, the prompt instructs the agent never to submit GitHub APPROVE. */
+    aiAllowApprove: boolean('ai_allow_approve').notNull().default(true),
+    /** One of: concise | thorough | security */
+    aiReviewStyle: text('ai_review_style').notNull().default('thorough'),
     createdAt: timestamp('created_at', { withTimezone: true })
       .defaultNow()
       .notNull(),

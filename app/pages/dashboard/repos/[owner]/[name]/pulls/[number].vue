@@ -14,6 +14,17 @@
         Pull request #{{ number }}
       </h1>
       <p class="mt-1 font-mono text-sm text-muted">{{ owner }}/{{ repo }}</p>
+      <div class="mt-3">
+        <UButton
+          :to="settingsUrl"
+          variant="outline"
+          color="neutral"
+          size="xs"
+          icon="i-lucide-settings"
+        >
+          AI review settings
+        </UButton>
+      </div>
     </div>
 
     <AiReviewPanel :owner="owner" :name="repo" :number="number" />
@@ -42,6 +53,10 @@ const number = computed(() => String(route.params.number))
 
 const listUrl = computed(
   () => `/dashboard/repos/${owner.value}/${repo.value}/pulls`,
+)
+
+const settingsUrl = computed(
+  () => `/dashboard/repos/${owner.value}/${repo.value}/settings`,
 )
 
 const githubPrUrl = computed(
