@@ -48,9 +48,10 @@
           {{ activeLabel }}
         </span>
       </div>
-      <p v-if="latest.summary && isTerminalSuccess(latest.status)" class="text-muted">
-        {{ latest.summary }}
-      </p>
+      <div v-if="latest.summary && isTerminalSuccess(latest.status)" class="space-y-1">
+        <p class="text-xs font-medium text-muted">Summary</p>
+        <MarkdownContent :source="latest.summary" />
+      </div>
       <p v-if="latest.error" class="text-error text-xs">
         {{ latest.error }}
       </p>
