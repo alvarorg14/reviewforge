@@ -44,7 +44,10 @@ const items = computed(() => [
     {
       label: 'Sign out',
       icon: 'i-lucide-log-out',
-      onSelect: () => void clear(),
+      onSelect: async () => {
+        await clear()
+        await navigateTo('/')
+      },
     },
   ],
 ])
