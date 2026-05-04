@@ -16,21 +16,21 @@ The codebase is structured for extension: PR comments, checks, deployments, and 
 
 ## Documentation
 
-- **[GitHub OAuth + GitHub App + local run (step-by-step)](./docs/CONFIGURATION.md)** — start here for credentials and `npm run dev`.
+- **[GitHub App setup + local run (step-by-step)](./docs/CONFIGURATION.md)** — one GitHub App for OAuth sign-in, repo access, and webhooks; credentials and `npm run dev`.
 - **[`.env.example`](./.env.example)** — all environment variables.
 - **[CONTRIBUTING.md](./CONTRIBUTING.md)** — PR labels, local checks, and contribution expectations.
 
 ## Quick start (Docker Compose)
 
 1. Copy [`.env.example`](./.env.example) to `.env` and fill in secrets (see [docs/CONFIGURATION.md](./docs/CONFIGURATION.md)).
-2. Create a **GitHub OAuth App** and a **GitHub App** (same doc).
+2. Create **one GitHub App** whose OAuth client handles sign-in (same doc).
 3. Run:
 
 ```bash
 docker compose up --build
 ```
 
-4. Open [http://localhost:3000](http://localhost:3000), sign in, then use **Connect repositories** to install the GitHub App.
+4. Open [http://localhost:3000](http://localhost:3000), sign in, then use **Connect repositories** or **Sync from GitHub** as needed.
 
 > After installing the GitHub App, GitHub redirects to the **Setup URL** configured in the GitHub App settings. Set it to `{NUXT_PUBLIC_BASE_URL}/api/auth/github/setup` so the installation is linked to your logged-in user.
 

@@ -10,8 +10,10 @@ declare module '#auth-utils' {
     loggedInAt?: Date
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-empty-object-type -- augmentation anchor
-  interface SecureSessionData {}
+  interface SecureSessionData {
+    /** GitHub OAuth access token (server-only); used to sync app installations. */
+    githubAccessToken?: string
+  }
 }
 
 export {}

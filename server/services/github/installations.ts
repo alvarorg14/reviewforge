@@ -1,3 +1,4 @@
+import { Octokit } from '@octokit/rest'
 import { and, eq } from 'drizzle-orm'
 import {
   installations,
@@ -57,6 +58,52 @@ export async function linkUserToInstallation(
     .insert(userInstallations)
     .values({ userId, installationId })
     .onConflictDoNothing()
+}
+
+/**
+ * Upsert each installation from GitHub and link the user. Used after
+ * `GET /user/installations` (user OAuth token) or when processing install webhooks.
+ */
+export async function applyGithubInstallationsForUser(
+  db: Database,
+  userId: number,
+  ghInstallations: Array<{
+    id: number
+    account?: { login?: string; type?: string; id: number } | null
+    suspended_at?: string | null
+  }>,
+): Promise<number[]> {
+  const linkedIds: number[] = []
+  for (const data of ghInstallations) {
+    const account = data.account
+    if (!account || !('login' in account) || !account.login) continue
+
+    const row = await upsertInstallationFromGithub(db, {
+      githubInstallationId: data.id,
+      accountLogin: account.login,
+      accountType: account.type ?? 'User',
+      accountId: account.id,
+      suspendedAt: data.suspended_at ? new Date(data.suspended_at) : null,
+    })
+    if (!row) continue
+    await linkUserToInstallation(db, userId, row.id)
+    linkedIds.push(row.id)
+  }
+  return linkedIds
+}
+
+/** List app installations the authenticated GitHub user can access; link each to this user. */
+export async function syncUserInstallations(
+  db: Database,
+  userId: number,
+  accessToken: string,
+): Promise<number[]> {
+  const octokit = new Octokit({ auth: accessToken })
+  const list = await octokit.paginate(
+    octokit.rest.apps.listInstallationsForAuthenticatedUser,
+    { per_page: 100 },
+  )
+  return applyGithubInstallationsForUser(db, userId, list)
 }
 
 export async function assertUserOwnsInstallation(

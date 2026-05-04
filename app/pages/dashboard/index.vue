@@ -7,14 +7,25 @@
           Installations linked to your account and their imported repositories.
         </p>
       </div>
-      <UButton
-        :to="installUrl"
-        :disabled="!githubAppSlug"
-        icon="i-simple-icons-github"
-        size="lg"
-      >
-        Connect repositories
-      </UButton>
+      <div class="flex flex-wrap gap-3">
+        <UButton
+          :to="installUrl"
+          :disabled="!githubAppSlug"
+          icon="i-simple-icons-github"
+          size="lg"
+        >
+          Connect repositories
+        </UButton>
+        <UButton
+          variant="soft"
+          icon="i-lucide-refresh-cw"
+          size="lg"
+          :loading="syncing"
+          @click="syncInstallationsFromGitHub"
+        >
+          Sync from GitHub
+        </UButton>
+      </div>
     </div>
 
     <UAlert
@@ -32,7 +43,7 @@
     <EmptyState
       v-else-if="!installations?.length"
       title="No repositories connected yet"
-      description="Install the ReviewForge GitHub App and grant access to the repositories you want to manage."
+      description="Install the ReviewForge GitHub App and grant access to the repositories you want to manage. If your organization already installed the App, use Sync from GitHub to link it to your account."
     />
 
     <div v-else class="space-y-12">
@@ -88,9 +99,39 @@ const installUrl = computed(() => {
   return `https://github.com/apps/${slug}/installations/new`
 })
 
-const { data: installations, pending } = await useFetch('/api/installations', {
+const toast = useToast()
+const syncing = ref(false)
+
+const {
+  data: installations,
+  pending,
+  refresh: refreshInstallations,
+} = await useFetch('/api/installations', {
   server: true,
 })
+
+async function syncInstallationsFromGitHub() {
+  syncing.value = true
+  try {
+    const result = await $fetch('/api/installations/sync', { method: 'POST' })
+    await refreshInstallations()
+    toast.add({
+      title: `Linked ${result.linked} installation${result.linked === 1 ? '' : 's'}`,
+      description: 'Installations discovered from GitHub are now visible below.',
+      color: 'success',
+    })
+  } catch (err) {
+    const message =
+      typeof err?.data?.message === 'string'
+        ? err.data.message
+        : typeof err?.message === 'string'
+          ? err.message
+          : 'Could not sync from GitHub.'
+    toast.add({ title: 'Sync failed', description: message, color: 'error' })
+  } finally {
+    syncing.value = false
+  }
+}
 
 const requestFetch = useRequestFetch()
 
