@@ -1,6 +1,6 @@
 # ReviewForge: GitHub apps and local setup
 
-This guide walks through creating the **GitHub OAuth App** (sign-in), the **GitHub App** (repo access + webhooks), filling `.env`, and running the stack locally with **npm**.
+This guide walks through creating **one GitHub App** that handles **OAuth sign-in** and **repository access + webhooks**, filling `.env`, and running the stack locally with **npm**.
 
 ---
 
@@ -8,44 +8,25 @@ This guide walks through creating the **GitHub OAuth App** (sign-in), the **GitH
 
 - **Node.js 24+** and **npm** (bundled with Node)
 - **PostgreSQL 16+** (local install, or only the `db` service from `docker compose up -d db`)
-- A GitHub account that can create OAuth Apps and GitHub Apps
+- A GitHub account that can create GitHub Apps
 
 For local dev, use base URL **`http://localhost:3000`** unless you use a tunnel (then substitute that URL everywhere below).
 
 ---
 
-## 1. GitHub OAuth App (user sign-in)
+## Why sign-in uses the GitHub App’s OAuth client
 
-Used by ReviewForge to know **who** is logged in (`nuxt-auth-utils` → `/auth/github`).
+ReviewForge calls GitHub’s [`GET /user/installations`](https://docs.github.com/en/rest/apps/installations#list-app-installations-accessible-to-the-user-access-token) when users sign in and when they click **Sync from GitHub** on the dashboard. That endpoint only accepts access tokens issued for **your GitHub App** (“user-to-server” OAuth).
 
-1. Open GitHub → **Settings** (your profile) → **Developer settings** → **OAuth Apps** → **New OAuth App**.  
-   For an organization: **Organization settings** → **Developer settings** → **OAuth Apps**.
+If **`NUXT_OAUTH_GITHUB_CLIENT_ID`** / **`SECRET`** come from a **standalone OAuth App** (Developer settings → **OAuth Apps**), GitHub returns **403** with a message that the token must be authorized to a GitHub App—in practice, installation sync will not work for teammates who never hit the setup URL.
 
-2. Fill in:
-   - **Application name**: e.g. `ReviewForge (local)`
-   - **Homepage URL**: `http://localhost:3000`
-   - **Authorization callback URL**: `http://localhost:3000/auth/github`  
-     (must match exactly; no trailing slash unless you use one consistently everywhere.)
-
-3. Click **Register application**.
-
-4. Copy **Client ID** and create a **Client secret** → copy the secret once.
-
-5. Put them in `.env`:
-   ```env
-   NUXT_OAUTH_GITHUB_CLIENT_ID=<Client ID>
-   NUXT_OAUTH_GITHUB_CLIENT_SECRET=<Client secret>
-   ```
-
-6. **Scopes**: Default GitHub OAuth for “Sign in with GitHub” usually includes `read:user` and `user:email`. If GitHub asks for scopes when authorizing, accept what your app requests. Adjust in the OAuth App settings if you tighten permissions.
-
-If redirects fail in production, set **`NUXT_OAUTH_GITHUB_REDIRECT_URL`** to the full callback URL (see [`.env.example`](../.env.example)).
+**Therefore:** Use the GitHub App’s **Client ID** and **Client secret** in `NUXT_OAUTH_GITHUB_*`, not a separate OAuth App.
 
 ---
 
-## 2. GitHub App (repositories + webhooks)
+## 1. GitHub App (sign-in + repositories + webhooks)
 
-Used to **list repositories**, **read pull requests**, and (when **AI PR review** is enabled) **submit reviews and inline comments** on GitHub for repos the user selects during install.
+Used so ReviewForge knows **who** is logged in, can **sync which app installations** your account can access, **list repositories**, **read pull requests**, and (when **AI PR review** is enabled) **submit reviews and inline comments** on GitHub for repos the user selects during install.
 
 1. GitHub → **Settings** → **Developer settings** → **GitHub Apps** → **New GitHub App**.
 
@@ -53,8 +34,15 @@ Used to **list repositories**, **read pull requests**, and (when **AI PR review*
 
 3. **Homepage URL**: `http://localhost:3000`
 
-4. **Identifying and authorizing users**  
-   - Uncheck **“Request user authorization (OAuth) during installation”** if you only use the separate OAuth App for login (ReviewForge’s flow: OAuth first, then install GitHub App).
+4. **Identifying and authorizing users** (required for sign-in and **Sync from GitHub**):
+   - **Callback URL** / **Authorization callback URL**: `http://localhost:3000/auth/github`  
+     (Must match exactly; no trailing slash unless you use one consistently everywhere.)
+   - After you save the app, open the app’s **General** page: copy **Client ID** and create a **Client secret** (under **Client secrets**). Put them in `.env`:
+     ```env
+     NUXT_OAUTH_GITHUB_CLIENT_ID=<GitHub App Client ID>
+     NUXT_OAUTH_GITHUB_CLIENT_SECRET=<GitHub App Client secret>
+     ```
+   - **Request user authorization (OAuth) during installation**: optional. ReviewForge still signs users in via `/auth/github` using the credentials above. You can leave this unchecked if you prefer the install flow not to trigger an extra OAuth screen at install time.
 
 5. **Webhook**
    - **Active**: checked  
@@ -88,9 +76,13 @@ Used to **list repositories**, **read pull requests**, and (when **AI PR review*
       (Again: use your tunnel URL if GitHub cannot call localhost.)
     - After a user installs the app, GitHub sends them here with `?installation_id=...` so ReviewForge can link the installation to the logged-in user and sync repos.
 
+If redirects fail in production, set **`NUXT_OAUTH_GITHUB_REDIRECT_URL`** to the full callback URL (see [`.env.example`](../.env.example)).
+
+**Scopes**: With a GitHub App user access token, GitHub derives permissions from the app’s settings and consent flow. Ensure the default consent screen includes whatever your app lists (typically user profile/email for sign-in). If authorization fails after switching from a standalone OAuth App, have users complete **Sign out** → **Continue with GitHub** once so GitHub issues a new token for the app.
+
 ---
 
-## 3. Environment file
+## 2. Environment file
 
 ```bash
 cp .env.example .env
@@ -102,16 +94,16 @@ Edit `.env` and set at least:
 |----------|---------|
 | `DATABASE_URL` | PostgreSQL connection string |
 | `NUXT_SESSION_PASSWORD` | At least 32 characters (session encryption) |
-| `NUXT_OAUTH_GITHUB_CLIENT_ID` / `NUXT_OAUTH_GITHUB_CLIENT_SECRET` | OAuth App |
+| `NUXT_OAUTH_GITHUB_CLIENT_ID` / `NUXT_OAUTH_GITHUB_CLIENT_SECRET` | **GitHub App** Client ID and Client secret (see §1 step 4) — **not** a standalone OAuth App |
 | `NUXT_PUBLIC_BASE_URL` | e.g. `http://localhost:3000` |
-| `NUXT_GITHUB_APP_ID` / `NUXT_GITHUB_APP_PRIVATE_KEY` / `NUXT_GITHUB_WEBHOOK_SECRET` | GitHub App |
+| `NUXT_GITHUB_APP_ID` / `NUXT_GITHUB_APP_PRIVATE_KEY` / `NUXT_GITHUB_WEBHOOK_SECRET` | Same GitHub App (App ID, key, webhook secret) |
 | `NUXT_PUBLIC_GITHUB_APP_SLUG` | Slug from `https://github.com/apps/<slug>` |
 | `NUXT_ENCRYPTION_KEY` (or `ENCRYPTION_KEY`) | At least 32 characters — encrypts **per-user** [Cursor API keys](https://cursor.com/settings) stored in the database for **AI PR review**. Each user adds their own key in **Dashboard → Settings**. Rotating this env invalidates stored keys until users save them again. |
 | `NUXT_GITHUB_MCP_REMOTE_URL` (or `GITHUB_MCP_REMOTE_URL`, optional) | GitHub remote MCP base URL (default: `https://api.githubcopilot.com/mcp/`). The app sends `Authorization: Bearer <installation token>`. |
 
 ---
 
-## 4. Run locally (npm)
+## 3. Run locally (npm)
 
 ### Option A: Postgres with Docker, app on the host
 
@@ -128,7 +120,7 @@ npm run db:migrate:prod
 npm run dev
 ```
 
-Open **http://localhost:3000** → **Continue with GitHub** → then **Connect repositories** on the dashboard.
+Open **http://localhost:3000** → **Continue with GitHub** → then **Connect repositories** or **Sync from GitHub** on the dashboard (the latter discovers installs your GitHub account can already access).
 
 ### Option B: Full stack in Docker
 
@@ -141,7 +133,7 @@ docker compose up --build
 
 ---
 
-## 5. Verify webhooks locally
+## 4. Verify webhooks locally
 
 GitHub’s servers cannot POST to `http://localhost:3000`. Use a proxy (e.g. [smee.io](https://smee.io)):
 
@@ -154,7 +146,7 @@ Without a tunnel, installs still work if you use the **Setup URL** on the same h
 
 ## Summary checklist
 
-- [ ] OAuth App callback: `{BASE_URL}/auth/github`
+- [ ] **Sign-in OAuth**: Callback `{BASE_URL}/auth/github`, using **this GitHub App’s** Client ID + secret (`NUXT_OAUTH_GITHUB_*`)
 - [ ] GitHub App webhook: `{BASE_URL}/api/webhooks/github` (or tunnel)
 - [ ] GitHub App setup URL: `{BASE_URL}/api/auth/github/setup`
 - [ ] Permissions: Metadata (read), Contents (read), Pull requests (**read & write** for AI review), Issues (read, recommended)
