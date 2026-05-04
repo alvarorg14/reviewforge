@@ -1,7 +1,8 @@
 import { users } from '../../db/schema'
+import { syncUserInstallations } from '../../services/github/installations'
 
 export default defineOAuthGitHubEventHandler({
-  async onSuccess(event, { user }) {
+  async onSuccess(event, { user, tokens }) {
     const db = useDb()
     const githubId = Number(user.id)
     const [row] = await db
@@ -39,7 +40,16 @@ export default defineOAuthGitHubEventHandler({
         avatarUrl: row.avatarUrl,
       },
       loggedInAt: new Date(),
+      secure: {
+        githubAccessToken: tokens.access_token,
+      },
     })
+
+    try {
+      await syncUserInstallations(db, row.id, tokens.access_token)
+    } catch (err) {
+      console.error('[auth/github] syncUserInstallations failed', err)
+    }
 
     return sendRedirect(event, '/dashboard')
   },
