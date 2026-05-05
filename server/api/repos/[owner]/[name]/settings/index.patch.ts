@@ -1,6 +1,6 @@
 import { AI_CONTEXT_MAX_LENGTH } from '../../../../../../shared/aiRepoSettings'
-import { eq } from 'drizzle-orm'
-import { repositories } from '../../../../../db/schema'
+import { and, eq, isNotNull } from 'drizzle-orm'
+import { repositories, userInstallations, users } from '../../../../../db/schema'
 import { isReviewStyle } from '../../../../../services/ai/types'
 import { getRepositoryForUser } from '../../../../../services/github/repos'
 
@@ -8,6 +8,8 @@ type PatchBody = {
   aiContext?: string | null
   aiAllowApprove?: boolean
   aiReviewStyle?: string
+  autoReviewEnabled?: boolean
+  autoReviewUserId?: number | null
 }
 
 export default defineEventHandler(async (event) => {
@@ -34,6 +36,8 @@ export default defineEventHandler(async (event) => {
     aiContext: string | null
     aiAllowApprove: boolean
     aiReviewStyle: string
+    autoReviewEnabled: boolean
+    autoReviewUserId: number | null
   }> = {}
 
   if ('aiContext' in body) {
@@ -73,6 +77,48 @@ export default defineEventHandler(async (event) => {
     patch.aiReviewStyle = body.aiReviewStyle
   }
 
+  if ('autoReviewEnabled' in body) {
+    if (typeof body.autoReviewEnabled !== 'boolean') {
+      throw createError({
+        statusCode: 400,
+        message: 'autoReviewEnabled must be a boolean',
+      })
+    }
+    patch.autoReviewEnabled = body.autoReviewEnabled
+  }
+
+  if ('autoReviewUserId' in body) {
+    const v = body.autoReviewUserId
+    if (v != null && (typeof v !== 'number' || !Number.isInteger(v) || v < 1)) {
+      throw createError({
+        statusCode: 400,
+        message: 'autoReviewUserId must be a positive integer or null',
+      })
+    }
+    if (v != null) {
+      const [allowed] = await db
+        .select({ id: users.id })
+        .from(users)
+        .innerJoin(userInstallations, eq(userInstallations.userId, users.id))
+        .where(
+          and(
+            eq(users.id, v),
+            eq(userInstallations.installationId, row.installation.id),
+            isNotNull(users.cursorApiKeyEncrypted),
+          ),
+        )
+        .limit(1)
+      if (!allowed) {
+        throw createError({
+          statusCode: 400,
+          message:
+            'autoReviewUserId must be a linked installation member with a Cursor API key stored in ReviewForge, or null',
+        })
+      }
+    }
+    patch.autoReviewUserId = v
+  }
+
   if (Object.keys(patch).length === 0) {
     throw createError({
       statusCode: 400,
@@ -90,6 +136,8 @@ export default defineEventHandler(async (event) => {
       aiContext: repositories.aiContext,
       aiAllowApprove: repositories.aiAllowApprove,
       aiReviewStyle: repositories.aiReviewStyle,
+      autoReviewEnabled: repositories.autoReviewEnabled,
+      autoReviewUserId: repositories.autoReviewUserId,
     })
     .from(repositories)
     .where(eq(repositories.id, row.repo.id))
@@ -103,5 +151,7 @@ export default defineEventHandler(async (event) => {
     aiContext: updated.aiContext ?? null,
     aiAllowApprove: updated.aiAllowApprove,
     aiReviewStyle: updated.aiReviewStyle,
+    autoReviewEnabled: updated.autoReviewEnabled,
+    autoReviewUserId: updated.autoReviewUserId ?? null,
   }
 })

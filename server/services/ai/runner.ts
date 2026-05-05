@@ -1,7 +1,11 @@
 import { eq } from 'drizzle-orm'
 import type { Database } from '../../db/client'
 import { aiReviewRuns } from '../../db/schema'
-import { getInstallationAccessToken } from '../github/client'
+import { completeCheckRun } from '../github/checks'
+import {
+  createInstallationOctokit,
+  getInstallationAccessToken,
+} from '../github/client'
 import { cursorReviewer } from './cursor'
 import type { ReviewStyle } from './types'
 import { getCursorApiKeyForUser } from './userApiKey'
@@ -9,6 +13,7 @@ import { getCursorApiKeyForUser } from './userApiKey'
 export type StartAIReviewParams = {
   db: Database
   runId: number
+  /** Cursor API key owner (billing); may differ from the user who clicked “Review” for manual runs. */
   requestedByUserId: number
   installationGithubId: number
   owner: string
@@ -18,6 +23,31 @@ export type StartAIReviewParams = {
   repoContext?: string | null
   allowApprove: boolean
   reviewStyle: ReviewStyle
+  /** When set, the run updates this GitHub check on completion. */
+  checkRunId?: number | null
+}
+
+async function finalizeGithubCheck(params: {
+  installationGithubId: number
+  owner: string
+  repo: string
+  checkRunId: number | null | undefined
+  conclusion: 'success' | 'failure'
+  summary: string
+}): Promise<void> {
+  if (!params.checkRunId) return
+  try {
+    const octokit = createInstallationOctokit(params.installationGithubId)
+    await completeCheckRun(octokit, {
+      owner: params.owner,
+      repo: params.repo,
+      checkRunId: params.checkRunId,
+      conclusion: params.conclusion,
+      summary: params.summary,
+    })
+  } catch (e) {
+    console.error('[ai-review] finalize GitHub check failed', e)
+  }
 }
 
 /** Fire-and-forget: updates ai_review_runs as the Cursor run progresses. */
@@ -40,7 +70,10 @@ async function processAIReviewRun(params: StartAIReviewParams): Promise<void> {
     repoContext,
     allowApprove,
     reviewStyle,
+    checkRunId,
   } = params
+
+  const checkBase = { installationGithubId, owner, repo, checkRunId }
 
   try {
     await db
@@ -56,14 +89,20 @@ async function processAIReviewRun(params: StartAIReviewParams): Promise<void> {
       master,
     )
     if (!apiKey?.trim()) {
+      const errMsg = 'Cursor API key missing for requesting user'
       await db
         .update(aiReviewRuns)
         .set({
           status: 'failed',
-          error: 'Cursor API key missing for requesting user',
+          error: errMsg,
           finishedAt: new Date(),
         })
         .where(eq(aiReviewRuns.id, runId))
+      await finalizeGithubCheck({
+        ...checkBase,
+        conclusion: 'failure',
+        summary: errMsg,
+      })
       return
     }
 
@@ -90,15 +129,30 @@ async function processAIReviewRun(params: StartAIReviewParams): Promise<void> {
         finishedAt: new Date(),
       })
       .where(eq(aiReviewRuns.id, runId))
+
+    const text =
+      [result.summary, result.error].filter(Boolean).join('\n\n') ||
+      '(no output)'
+    await finalizeGithubCheck({
+      ...checkBase,
+      conclusion: result.status === 'succeeded' ? 'success' : 'failure',
+      summary: text,
+    })
   } catch (e) {
     console.error('[ai-review]', e)
+    const msg = e instanceof Error ? e.message : String(e)
     await db
       .update(aiReviewRuns)
       .set({
         status: 'failed',
-        error: e instanceof Error ? e.message : String(e),
+        error: msg,
         finishedAt: new Date(),
       })
       .where(eq(aiReviewRuns.id, runId))
+    await finalizeGithubCheck({
+      ...checkBase,
+      conclusion: 'failure',
+      summary: msg,
+    })
   }
 }
