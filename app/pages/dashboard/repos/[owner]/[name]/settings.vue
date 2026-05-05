@@ -17,7 +17,8 @@
         {{ owner }}/{{ name }}
       </p>
       <p class="mt-2 text-sm text-muted">
-        These options apply when you run an AI review from ReviewForge for this repository.
+        These options apply when you run an AI review from ReviewForge for this repository, including
+        <strong>automated</strong> runs on new PRs when enabled below.
         They are injected into the review agent prompt.
       </p>
     </div>
@@ -62,8 +63,44 @@
 
       <UCard>
         <template #header>
-          <h2 class="font-semibold">Approvals</h2>
+          <h2 class="font-semibold">Automated reviews</h2>
         </template>
+        <div class="flex flex-col gap-4">
+          <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p class="font-medium">
+                Run AI review when a PR is opened
+              </p>
+              <p class="mt-1 text-sm text-muted">
+                Triggers on <strong>opened</strong>, <strong>reopened</strong>, and when a draft becomes
+                <strong>ready for review</strong>. Draft PRs are skipped until they leave draft.
+              </p>
+            </div>
+            <USwitch v-model="form.autoReviewEnabled" />
+          </div>
+          <div>
+            <p class="text-sm text-muted">
+              Reviewer account (whose stored <span class="font-mono">Cursor</span> API key is used)
+            </p>
+            <USelect
+              v-model="form.reviewerAccountValue"
+              :items="reviewerItems"
+              :disabled="!form.autoReviewEnabled"
+              class="mt-2 w-full max-w-md"
+              value-key="value"
+              label-key="label"
+            />
+            <p
+              v-if="autoReviewWarning"
+              class="mt-2 text-sm text-amber-600 dark:text-amber-400"
+            >
+              {{ autoReviewWarning }}
+            </p>
+          </div>
+        </div>
+      </UCard>
+
+      <UCard>
         <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p class="font-medium">
@@ -110,10 +147,19 @@ const settingsApi = computed(
     `/api/repos/${encodeURIComponent(owner.value)}/${encodeURIComponent(name.value)}/settings`,
 )
 
+/** Sentinel: use installation default reviewer (see server webhook resolution). */
+const USE_INSTALLATION_DEFAULT = -1
+
+type CandidateUser = { id: number; login: string; name: string | null }
+
 type SettingsDto = {
   aiContext: string | null
   aiAllowApprove: boolean
   aiReviewStyle: 'concise' | 'thorough' | 'security'
+  autoReviewEnabled: boolean
+  autoReviewUserId: number | null
+  installationDefaultAutoReviewUserId: number | null
+  candidates: CandidateUser[]
 }
 
 const { data, pending, refresh } = await useFetch<SettingsDto>(settingsApi, {
@@ -127,6 +173,42 @@ const form = reactive({
   aiContext: '',
   aiAllowApprove: true,
   aiReviewStyle: 'thorough' as SettingsDto['aiReviewStyle'],
+  autoReviewEnabled: false,
+  /** {@link USE_INSTALLATION_DEFAULT} or a user id from `candidates`. */
+  reviewerAccountValue: USE_INSTALLATION_DEFAULT,
+})
+
+const reviewerItems = computed(() => {
+  const items: { label: string; value: number }[] = [
+    {
+      label: 'Installation default (first linked user with a Cursor key)',
+      value: USE_INSTALLATION_DEFAULT,
+    },
+  ]
+  const c = data.value?.candidates
+  if (!c?.length) return items
+  for (const u of c) {
+    const namePart = u.name ? ` — ${u.name}` : ''
+    items.push({ label: `${u.login}${namePart}`, value: u.id })
+  }
+  return items
+})
+
+const autoReviewWarning = computed(() => {
+  const d = data.value
+  if (!d || !form.autoReviewEnabled) return ''
+  if (!d.candidates?.length) {
+    return 'Nobody linked to this installation has stored a Cursor API key in ReviewForge. Automated reviews will fail until someone adds a key under Settings.'
+  }
+  const usingInstallDefault =
+    form.reviewerAccountValue === USE_INSTALLATION_DEFAULT
+  if (
+    usingInstallDefault &&
+    d.installationDefaultAutoReviewUserId == null
+  ) {
+    return 'No installation default reviewer is set yet. Link this GitHub App from ReviewForge with an account that has a Cursor API key, or pick a reviewer below.'
+  }
+  return ''
 })
 
 const styleItems = [
@@ -142,6 +224,9 @@ watch(
     form.aiContext = d.aiContext ?? ''
     form.aiAllowApprove = d.aiAllowApprove
     form.aiReviewStyle = d.aiReviewStyle
+    form.autoReviewEnabled = d.autoReviewEnabled
+    form.reviewerAccountValue =
+      d.autoReviewUserId ?? USE_INSTALLATION_DEFAULT
   },
   { immediate: true },
 )
@@ -151,6 +236,9 @@ function resetForm() {
   form.aiContext = data.value.aiContext ?? ''
   form.aiAllowApprove = data.value.aiAllowApprove
   form.aiReviewStyle = data.value.aiReviewStyle
+  form.autoReviewEnabled = data.value.autoReviewEnabled
+  form.reviewerAccountValue =
+    data.value.autoReviewUserId ?? USE_INSTALLATION_DEFAULT
 }
 
 const saving = ref(false)
@@ -164,6 +252,11 @@ async function save() {
         aiContext: form.aiContext.trim() === '' ? null : form.aiContext,
         aiAllowApprove: form.aiAllowApprove,
         aiReviewStyle: form.aiReviewStyle,
+        autoReviewEnabled: form.autoReviewEnabled,
+        autoReviewUserId:
+          form.reviewerAccountValue === USE_INSTALLATION_DEFAULT
+            ? null
+            : form.reviewerAccountValue,
       },
     })
     await refresh()

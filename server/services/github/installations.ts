@@ -1,5 +1,5 @@
 import { Octokit } from '@octokit/rest'
-import { and, eq } from 'drizzle-orm'
+import { and, eq, isNull } from 'drizzle-orm'
 import {
   installations,
   repositories,
@@ -58,6 +58,16 @@ export async function linkUserToInstallation(
     .insert(userInstallations)
     .values({ userId, installationId })
     .onConflictDoNothing()
+
+  await db
+    .update(installations)
+    .set({ defaultAutoReviewUserId: userId })
+    .where(
+      and(
+        eq(installations.id, installationId),
+        isNull(installations.defaultAutoReviewUserId),
+      ),
+    )
 }
 
 /**

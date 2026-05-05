@@ -35,6 +35,11 @@ export const installations = pgTable('installations', {
   accountLogin: text('account_login').notNull(),
   accountType: text('account_type').notNull(),
   accountId: bigint('account_id', { mode: 'number' }).notNull(),
+  /** First linked user’s Cursor key is used for auto-review when repo has none set. */
+  defaultAutoReviewUserId: integer('default_auto_review_user_id').references(
+    () => users.id,
+    { onDelete: 'set null' },
+  ),
   suspendedAt: timestamp('suspended_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true })
     .defaultNow()
@@ -78,6 +83,12 @@ export const repositories = pgTable(
     aiAllowApprove: boolean('ai_allow_approve').notNull().default(true),
     /** One of: concise | thorough | security */
     aiReviewStyle: text('ai_review_style').notNull().default('thorough'),
+    /** When true, process pull_request webhooks for AI review on this repo. */
+    autoReviewEnabled: boolean('auto_review_enabled').notNull().default(false),
+    /** User whose stored Cursor API key runs automated reviews (falls back to installation default). */
+    autoReviewUserId: integer('auto_review_user_id').references(() => users.id, {
+      onDelete: 'set null',
+    }),
     createdAt: timestamp('created_at', { withTimezone: true })
       .defaultNow()
       .notNull(),
@@ -106,6 +117,10 @@ export const aiReviewRuns = pgTable(
       .defaultNow()
       .notNull(),
     finishedAt: timestamp('finished_at', { withTimezone: true }),
+    prHeadSha: text('pr_head_sha'),
+    githubCheckRunId: bigint('github_check_run_id', { mode: 'number' }),
+    /** manual | auto — avoids reserved SQL word `trigger`. */
+    reviewTrigger: text('review_trigger').notNull().default('manual'),
   },
   (t) => ({
     repoPrIdx: index('ai_review_runs_repo_pr_idx').on(t.repositoryId, t.prNumber),

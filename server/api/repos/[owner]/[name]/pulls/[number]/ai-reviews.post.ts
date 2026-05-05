@@ -3,6 +3,7 @@ import { aiReviewRuns } from '../../../../../../db/schema'
 import { startAIReviewRunInBackground } from '../../../../../../services/ai/runner'
 import { isReviewStyle } from '../../../../../../services/ai/types'
 import { userHasStoredCursorApiKey } from '../../../../../../services/ai/userApiKey'
+import { createInProgressCheckRun } from '../../../../../../services/github/checks'
 import { createInstallationOctokit } from '../../../../../../services/github/client'
 import { getRepositoryForUser } from '../../../../../../services/github/repos'
 
@@ -61,6 +62,7 @@ export default defineEventHandler(async (event) => {
     row.installation.githubInstallationId,
   )
   let prHtmlUrl: string
+  let prHeadSha: string
   try {
     const { data: pr } = await octokit.rest.pulls.get({
       owner,
@@ -68,9 +70,16 @@ export default defineEventHandler(async (event) => {
       pull_number: prNumber,
     })
     prHtmlUrl = pr.html_url
+    prHeadSha = pr.head.sha
   } catch {
     throw createError({ statusCode: 404, message: 'Pull request not found' })
   }
+
+  const pub = useRuntimeConfig().public
+  const base = String(pub.baseUrl || '').replace(/\/$/, '')
+  const detailsUrl = base
+    ? `${base}/dashboard/repos/${encodeURIComponent(owner)}/${encodeURIComponent(name)}/pulls/${prNumber}`
+    : null
 
   const reviewStyle = row.repo.aiReviewStyle
   if (!isReviewStyle(reviewStyle)) {
@@ -87,12 +96,43 @@ export default defineEventHandler(async (event) => {
       prNumber,
       requestedByUserId: session.user.id,
       status: 'pending',
+      prHeadSha,
+      reviewTrigger: 'manual',
     })
     .returning({ id: aiReviewRuns.id })
 
   if (!inserted) {
     throw createError({ statusCode: 500, message: 'Failed to start AI review' })
   }
+
+  let checkRunId: number
+  try {
+    checkRunId = await createInProgressCheckRun(octokit, {
+      owner,
+      repo: name,
+      headSha: prHeadSha,
+      detailsUrl,
+    })
+  } catch (e) {
+    console.error('[ai-reviews] createInProgressCheckRun', e)
+    await db
+      .update(aiReviewRuns)
+      .set({
+        status: 'failed',
+        error: e instanceof Error ? e.message : String(e),
+        finishedAt: new Date(),
+      })
+      .where(eq(aiReviewRuns.id, inserted.id))
+    throw createError({
+      statusCode: 502,
+      message: 'Could not create GitHub check run for this review',
+    })
+  }
+
+  await db
+    .update(aiReviewRuns)
+    .set({ githubCheckRunId: checkRunId })
+    .where(eq(aiReviewRuns.id, inserted.id))
 
   startAIReviewRunInBackground({
     db,
@@ -106,6 +146,7 @@ export default defineEventHandler(async (event) => {
     repoContext: row.repo.aiContext,
     allowApprove: row.repo.aiAllowApprove,
     reviewStyle,
+    checkRunId,
   })
 
   return { runId: inserted.id }

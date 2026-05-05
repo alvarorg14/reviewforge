@@ -54,6 +54,7 @@ Used so ReviewForge knows **who** is logged in, can **sync which app installatio
    - **Metadata**: Read-only (required)
    - **Contents**: Read-only (read files / diffs as needed)
    - **Pull requests**: **Read and write** — required for **AI PR review** (Cursor agent posts a review body, inline comments, and approve / request changes via the GitHub API). Read-only is enough for browsing the PR list only; without write, review submission from the app will fail with `403` / “Resource not accessible by integration”.
+   - **Checks**: **Read and write** — creates GitHub **check runs** so PRs show automated review progress (in progress → success/failure when the agent finishes).
    - **Issues**: Read-only — **recommended** so the reviewer can open issues linked from the PR description (the AI prompt asks for that context). Optional if you never link issues in PRs.
 
    If you **raise** permissions on an app that is already installed, each account or organization must **accept the updated permissions** (GitHub shows a prompt on next use or from **Settings → Applications**).
@@ -61,6 +62,7 @@ Used so ReviewForge knows **who** is logged in, can **sync which app installatio
 7. **Subscribe to events**:
    - **Installation**
    - **Installation repositories**
+   - **Pull request** — enables **automated** AI reviews when a PR is opened, reopened, or marked ready for review (draft PRs are ignored until they leave draft). Requires repository automation settings in ReviewForge.
 
 8. **Where can this GitHub App be installed?**  
    Choose **Only on this account** for personal testing, or **Any account** if you need org installs.
